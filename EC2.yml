@@ -1,0 +1,26 @@
+Parameters:
+  KeyName: #타입이 무엇인지 알려줌 
+    Type: AWS::EC2::KeyPair::KeyName
+
+Resources: #반드시 필요 리소스를 코드를 만들어서 배포할 원본 소스 코드
+  MyInstance:  # 로지컬 아이디 / 이 아이디는 어떤 리소스를 만들건지 
+    Type: AWS::EC2::Instance # 알려주는게 타입 /EC2 인스턴스 타입 알려주는 것
+    Properties:
+      ImageId: ami-05e02e6210658716f #이미지 ID 매개변수
+      InstanceType: t2.micro #인스턴스 타입
+      KeyName: !Ref KeyName #!들어가 있는 것은 다 함수 얘는 리터런스 함수 
+      Tags: #예를 들어,EC2 인스턴스 만들 때 이름 붙이는 거 /복수형 매개변수는 리스트로 값을 매길 수 있음 /EC2를 누가 배포했는지 누가 소유했는지 리스트 형식으로 나열
+        - Key: Name #그래서 값을 넣을 때 - 써야함 
+          Value: MyInstance
+      SecurityGroups: #보안그룹 근데 s붙여서 리스트 형식으로 써야함 /보안그룹에 ! Ref 참조했을 때 리턴값으로 보안그룹 아이디를 뱉어냄
+        - !Ref MySG #그리고 값을 넣을 때 꼭 - 하이픈 붙여야 함 / 그리고 이 MySG라는 리소스를 참조 하겠다는 뜻 
+      UserData: #EC2를 만들거 나서 쉘 상에서 실행시킬 코드를 넣는 거
+        Fn::Base64: | # 밑에 적혀있는 코드를 인코딩 방식을 이용해서 userdata에 형 변환해서 넣는 것 그리고 밑에 코드를 넣을 때 실행 가능한 형태를 넣어야 하는데 그게 Fn::Base64임
+          !Sub | #여기다 루트 권한으로 실행됨
+            #!/bin/bash
+            amazon-linux-extras install epel -y
+            yum install httpd -y
+            systemctl enable --now httpd
+            echo "<h1>Test Web Server</h1>" >
+            /var/www/html/index.html
+            touch /home/ec2-user/soldesk.txt
